@@ -1,0 +1,53 @@
+buildscript {
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        maven { url "http://repo.spring.io/libs-release" }
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:1.1.5.RELEASE")
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'idea'
+apply plugin: 'spring-boot'
+apply plugin: 'maven'
+
+sourceCompatibility = 1.6
+
+compileJava {
+    targetCompatibility = 1.6
+}
+
+jar {
+    baseName = 'football_doodle'
+    version =  '1.0.0'
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+    maven { url "http://repo.spring.io/libs-release" }
+}
+
+dependencies {
+    compile "org.springframework.boot:spring-boot-starter"
+    compile "org.springframework:spring-context"
+    compile "org.springframework:spring-context-support"
+    compile "org.springframework:spring-webmvc"
+    compile "com.toedter:jcalendar:1.4"
+    compile fileTree(dir: 'lib', include: '*.jar')
+    compile "javax.mail:mail:1.4.7"
+    compile "org.apache.velocity:velocity:1.7"
+    compile "com.fasterxml.jackson.core:jackson-databind"
+}
+
+configurations.all {
+    exclude group: 'javassist'
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.0'
+}
