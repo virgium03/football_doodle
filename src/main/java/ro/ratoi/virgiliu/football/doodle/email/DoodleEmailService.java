@@ -1,5 +1,6 @@
 package ro.ratoi.virgiliu.football.doodle.email;
 
+import com.google.gson.Gson;
 import org.apache.commons.lang.StringUtils;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
@@ -13,12 +14,16 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.RestTemplate;
 import ro.ratoi.virgiliu.football.doodle.AppConfigParams;
 
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Form;
+import javax.ws.rs.core.Response;
 import java.io.StringWriter;
 import java.text.SimpleDateFormat;
 
@@ -36,19 +41,20 @@ public class DoodleEmailService {
 
     private final AppConfigParams appConfigParams;
 
-    private final RestTemplate restTemplate;
+    private final Client restClient;
 
     private final SimpleDateFormat mailDateFormat = new SimpleDateFormat("EEEEEEEEEE, d MMM yyyy");
 
     @Autowired
     DoodleEmailService(@Qualifier("gmailMailSender") JavaMailSender gmailSender,
                        @Qualifier("ecMailSender") JavaMailSender europeanCommissionSender,
+                       Client restClient,
                        AppConfigParams appConfigParams) {
         this.gmailSender = gmailSender;
         this.europeanCommissionSender = europeanCommissionSender;
+        this.restClient = restClient;
         this.appConfigParams = appConfigParams;
         Velocity.init();
-        restTemplate = new RestTemplate();
     }
 
     public void sendMail(MailDto dto) {
@@ -76,22 +82,28 @@ public class DoodleEmailService {
     }
 
     private DoodleResponse buildDoodleResponse(MailDto dto) {
-        MultiValueMap<String, Object> param = new LinkedMultiValueMap<String, Object>();
-        param.add("title", dto.getTitle());
-        param.add("locName", dto.getLocation());
-        param.add("initiatorAlias", dto.getInitiatorName());
-        param.add("initiatorEmail", dto.getInitiatorEmail());
-        param.add("hidden", "false");
-        param.add("ifNeedBe", "false");
-        param.add("askAddress", "false");
-        param.add("askEmail", "false");
-        param.add("askPhone", "false");
-        param.add("optionsMode", "dates");
-        param.add("options[]", buildDoodleTime(dto));
-        param.add("type", "DATE");
+        WebTarget target = restClient.target(appConfigParams.getDoodleBaseUrl()).path("/np/new-polls/");
 
-        return restTemplate.postForEntity(appConfigParams.getDoodleBaseUrl() + "/np/new-polls/",
-                param, DoodleResponse.class).getBody();
+        Form form = new Form()
+                .param("title", dto.getTitle())
+                .param("locName", dto.getLocation())
+                .param("initiatorAlias", dto.getInitiatorName())
+                .param("initiatorEmail", dto.getInitiatorEmail())
+                .param("hidden", "false")
+                .param("ifNeedBe", "false")
+                .param("askAddress", "false")
+                .param("askEmail", "false")
+                .param("askPhone", "false")
+                .param("optionsMode", "dates")
+                .param("options[]", buildDoodleTime(dto))
+                .param("type", "DATE");
+
+        Response response = target.request().post(Entity.form(form));
+        String responseString = response.readEntity(String.class);
+        if (response.getStatus() != 200) {
+            throw new IllegalArgumentException(responseString);
+        }
+        return new Gson().fromJson(responseString, DoodleResponse.class);
     }
 
     private String buildDoodleTime(MailDto dto) {
