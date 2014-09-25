@@ -16,14 +16,16 @@ apply plugin: 'spring-boot'
 apply plugin: 'maven'
 
 sourceCompatibility = 1.6
+targetCompatibility = 1.6
 
 compileJava {
+    sourceCompatibility = 1.6
     targetCompatibility = 1.6
 }
 
 jar {
     baseName = 'football_doodle'
-    version =  '1.0.0'
+    version =  '1.0.2'
 }
 
 repositories {
@@ -43,6 +45,8 @@ dependencies {
     compile "org.glassfish.jersey.core:jersey-client:2.11"
     compile "com.google.code.gson:gson:2.3"
     compile "org.glassfish.jersey.connectors:jersey-apache-connector:2.11"
+
+    compile "org.projectlombok:lombok:1.14.8"
 }
 
 configurations.all {

@@ -23,6 +23,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.net.URL;
+import java.util.Calendar;
 import java.util.Date;
 
 /**
@@ -44,7 +45,7 @@ class FootballPanel extends JPanel {
     private final JTextArea recipientsTextArea = new JTextArea(3, 100);
     private final JTextField initiatorName = new JTextField(30);
     private final JTextField initiatorEmail = new JTextField(30);
-    private final JPasswordField gmailPassword = new JPasswordField(30);
+    private final JPasswordField emailPassword = new JPasswordField(30);
     private final JButton sendButton = new JButton("Create doodle and send emails");
     private final Font defaultFont = new Font("Serif", Font.PLAIN, 18);
 
@@ -84,7 +85,7 @@ class FootballPanel extends JPanel {
         c.gridx = 0;
         c.gridy = 0;
         c.anchor = GridBagConstraints.LINE_END;
-        JLabel titleLabel = new JLabel("Doodle Title");
+        JLabel titleLabel = new JLabel("1. Doodle Title");
         titleLabel.setHorizontalAlignment(SwingConstants.RIGHT);
         titleLabel.setFont(defaultFont);
         add(titleLabel, c);
@@ -100,7 +101,7 @@ class FootballPanel extends JPanel {
         c.gridx = 0;
         c.gridy = 1;
         c.anchor = GridBagConstraints.LINE_END;
-        JLabel locationLabel = new JLabel("Doodle Location");
+        JLabel locationLabel = new JLabel("2. Doodle Location");
         locationLabel.setHorizontalAlignment(SwingConstants.RIGHT);
         locationLabel.setFont(defaultFont);
         add(locationLabel, c);
@@ -116,7 +117,7 @@ class FootballPanel extends JPanel {
         c.gridx = 0;
         c.gridy = 2;
         c.anchor = GridBagConstraints.LINE_END;
-        JLabel dateLabel = new JLabel("Doodle Date");
+        JLabel dateLabel = new JLabel("3. Doodle Date");
         dateLabel.setHorizontalAlignment(SwingConstants.RIGHT);
         dateLabel.setFont(defaultFont);
         add(dateLabel, c);
@@ -124,14 +125,26 @@ class FootballPanel extends JPanel {
         c.gridx = 1;
         c.gridy = 2;
         dateChooser.setFont(defaultFont);
+        dateChooser.setDateFormatString("EEEEEEEEEE, d MMM yyyy");
         add(dateChooser, c);
+        dateChooser.setDate(suggestFootballMatchDate());
+    }
+
+    private Date suggestFootballMatchDate() {
+        Calendar c = Calendar.getInstance();
+        int diff = appConfigParams.getDoodleDefaultDayOfWeek() - c.get(Calendar.DAY_OF_WEEK);
+        if (!(diff > 0)) {
+            diff += 7;
+        }
+        c.add(Calendar.DAY_OF_MONTH, diff);
+        return c.getTime();
     }
 
     private void addDoodleMatchTime(GridBagConstraints c) {
         c.gridx = 0;
         c.gridy = 3;
         c.anchor = GridBagConstraints.LINE_END;
-        JLabel timeLabel = new JLabel("Doodle Time");
+        JLabel timeLabel = new JLabel("4. Doodle Time");
         timeLabel.setHorizontalAlignment(SwingConstants.RIGHT);
         timeLabel.setFont(defaultFont);
         add(timeLabel, c);
@@ -159,7 +172,7 @@ class FootballPanel extends JPanel {
         c.gridy = 4;
         c.gridheight = 1;
         c.weighty = 0.0;
-        JLabel initiatorNameLabel = new JLabel("Doodle Initiator Name");
+        JLabel initiatorNameLabel = new JLabel("5. Doodle Initiator Name");
         initiatorNameLabel.setHorizontalAlignment(SwingConstants.RIGHT);
         initiatorNameLabel.setFont(defaultFont);
         add(initiatorNameLabel, c);
@@ -167,7 +180,7 @@ class FootballPanel extends JPanel {
         c.gridx = 1;
         c.gridy = 4;
         initiatorName.setFont(defaultFont);
-        initiatorName.setText(this.appConfigParams.getDoodleInitiatorName());
+        initiatorName.setText(appConfigParams.getDoodleInitiatorName());
         add(initiatorName, c);
     }
 
@@ -176,7 +189,7 @@ class FootballPanel extends JPanel {
         c.gridy = 5;
         c.gridheight = 1;
         c.weighty = 0.0;
-        JLabel initiatorEmailLabel = new JLabel("Doodle Initiator Email");
+        JLabel initiatorEmailLabel = new JLabel("6. Doodle Initiator Email");
         initiatorEmailLabel.setHorizontalAlignment(SwingConstants.RIGHT);
         initiatorEmailLabel.setFont(defaultFont);
         add(initiatorEmailLabel, c);
@@ -184,7 +197,7 @@ class FootballPanel extends JPanel {
         c.gridx = 1;
         c.gridy = 5;
         initiatorEmail.setFont(defaultFont);
-        initiatorEmail.setText(this.appConfigParams.getDoodleInitiatorEmail());
+        initiatorEmail.setText(this.appConfigParams.getDoodleECEmail());
         add(initiatorEmail, c);
     }
 
@@ -192,7 +205,7 @@ class FootballPanel extends JPanel {
         c.gridx = 0;
         c.gridy = 6;
         c.anchor = GridBagConstraints.LINE_END;
-        JLabel emailTextLabel = new JLabel("Email Text");
+        JLabel emailTextLabel = new JLabel("7. Email Text");
         emailTextLabel.setHorizontalAlignment(SwingConstants.RIGHT);
         emailTextLabel.setFont(defaultFont);
         emailTextLabel.setToolTipText("This is the email template that uses dynamic variables like ${matchDate}");
@@ -226,7 +239,7 @@ class FootballPanel extends JPanel {
         c.gridy = 17;
         c.gridheight = 1;
         c.weighty = 0.1;
-        JLabel recipientsLabel = new JLabel("Email Recipients");
+        JLabel recipientsLabel = new JLabel("8. Email Recipients");
         recipientsLabel.setHorizontalAlignment(SwingConstants.RIGHT);
         recipientsLabel.setFont(defaultFont);
         recipientsLabel.setToolTipText("Example: hodor@hodor.com; jonsnow@wall.org");
@@ -241,14 +254,15 @@ class FootballPanel extends JPanel {
     }
 
     private void addEmailProvider(GridBagConstraints c) {
-        emailProviderCombo.addItem(EmailProvider.EUROPEAN_COMMISSION);
-        emailProviderCombo.addItem(EmailProvider.GOOGLE);
+        for (EmailProvider prov : EmailProvider.values()) {
+            emailProviderCombo.addItem(prov);
+        }
 
         c.gridx = 0;
         c.gridy = 18;
         c.weighty = 0.0;
         c.anchor = GridBagConstraints.LINE_END;
-        JLabel emailProviderLabel = new JLabel("Email Provider");
+        JLabel emailProviderLabel = new JLabel("9. Email Provider");
         emailProviderLabel.setHorizontalAlignment(SwingConstants.RIGHT);
         emailProviderLabel.setFont(defaultFont);
         emailProviderLabel.setToolTipText("Which SMTP server to use for sending the notification email.");
@@ -258,6 +272,27 @@ class FootballPanel extends JPanel {
         c.gridy = 18;
         emailProviderCombo.setFont(defaultFont);
         add(emailProviderCombo, c);
+
+        emailProviderCombo.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                updateEmailAddress();
+            }
+        });
+    }
+
+    private void updateEmailAddress() {
+        EmailProvider prov = (EmailProvider) emailProviderCombo.getSelectedItem();
+        if (prov == null) {
+            return;
+        }
+        if (EmailProvider.GOOGLE.equals(prov)) {
+            initiatorEmail.setText(appConfigParams.getGoogleMailEmail());
+        } else if (EmailProvider.YAHOO.equals(prov)) {
+            initiatorEmail.setText(appConfigParams.getYahooMailEmail());
+        } else {
+            initiatorEmail.setText(appConfigParams.getDoodleECEmail());
+        }
     }
 
     private void addGmailPassword(GridBagConstraints c) {
@@ -265,16 +300,16 @@ class FootballPanel extends JPanel {
         c.gridy = 19;
         c.gridheight = 1;
         c.weighty = 0.0;
-        JLabel passwordLabel = new JLabel("Gmail Password");
+        JLabel passwordLabel = new JLabel("10. Email Password");
         passwordLabel.setHorizontalAlignment(SwingConstants.RIGHT);
         passwordLabel.setFont(defaultFont);
-        passwordLabel.setToolTipText("In case you chose Google's SMTP server, you need to authenticate");
+        passwordLabel.setToolTipText("In case you chose Google's or Yahoo's SMTP server, you need to authenticate");
         add(passwordLabel, c);
 
         c.gridx = 1;
         c.gridy = 19;
-        gmailPassword.setFont(defaultFont);
-        add(gmailPassword, c);
+        emailPassword.setFont(defaultFont);
+        add(emailPassword, c);
     }
 
     private void addSendButton(GridBagConstraints c) {
@@ -346,6 +381,15 @@ class FootballPanel extends JPanel {
     private void validateInitiatorEmail() {
         validateTextComponent(initiatorEmail, "Doodle initiator email is mandatory.");
         validateEmails(initiatorEmail);
+        if (EmailProvider.GOOGLE.equals(emailProviderCombo.getSelectedItem()) &&
+                !initiatorEmail.getText().endsWith("gmail.com")) {
+            initiatorEmail.requestFocus();
+            throw new IllegalArgumentException("Initiator email must end in gmail.com.");
+        } else if (EmailProvider.YAHOO.equals(emailProviderCombo.getSelectedItem()) &&
+                !initiatorEmail.getText().contains("@yahoo")) {
+            initiatorEmail.requestFocus();
+            throw new IllegalArgumentException("Initiator email must end in yahoo.com.");
+        }
     }
 
     private void validateEmails(JTextComponent tc) {
@@ -373,15 +417,15 @@ class FootballPanel extends JPanel {
     }
 
     private void validateGmailPassword() {
-        if (missingGmailPassword()) {
-            gmailPassword.requestFocus();
-            throw new IllegalArgumentException("Unfortunately gmail password is mandatory when using gmail servers.");
+        if (missingEmailPassword()) {
+            emailPassword.requestFocus();
+            throw new IllegalArgumentException("Unfortunately email password is mandatory when using gmail or Yahoo servers.");
         }
     }
 
-    private boolean missingGmailPassword() {
-        return EmailProvider.GOOGLE.equals(emailProviderCombo.getSelectedItem()) &&
-                ArrayUtils.isEmpty(gmailPassword.getPassword());
+    private boolean missingEmailPassword() {
+        return !EmailProvider.EUROPEAN_COMMISSION.equals(emailProviderCombo.getSelectedItem()) &&
+                ArrayUtils.isEmpty(emailPassword.getPassword());
     }
 
     private MailDto buildMailDto() {
@@ -395,7 +439,7 @@ class FootballPanel extends JPanel {
         dto.setInitiatorName(initiatorName.getText());
         dto.setInitiatorEmail(initiatorEmail.getText());
         dto.setEmailProvider((EmailProvider) emailProviderCombo.getSelectedItem());
-        dto.setGmailPassword(new String(gmailPassword.getPassword()));
+        dto.setEmailPassword(new String(emailPassword.getPassword()));
         return dto;
     }
 

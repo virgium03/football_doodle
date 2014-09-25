@@ -12,8 +12,6 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 import ro.ratoi.virgiliu.football.doodle.AppConfigParams;
 
 import javax.mail.Message;
@@ -37,6 +35,8 @@ public class DoodleEmailService {
 
     private final JavaMailSender gmailSender;
 
+    private final JavaMailSender yahooMailSender;
+
     private final JavaMailSender europeanCommissionSender;
 
     private final AppConfigParams appConfigParams;
@@ -47,10 +47,12 @@ public class DoodleEmailService {
 
     @Autowired
     DoodleEmailService(@Qualifier("gmailMailSender") JavaMailSender gmailSender,
+                       @Qualifier("yahooMailSender") JavaMailSender yahooMailSender,
                        @Qualifier("ecMailSender") JavaMailSender europeanCommissionSender,
                        Client restClient,
                        AppConfigParams appConfigParams) {
         this.gmailSender = gmailSender;
+        this.yahooMailSender = yahooMailSender;
         this.europeanCommissionSender = europeanCommissionSender;
         this.restClient = restClient;
         this.appConfigParams = appConfigParams;
@@ -68,6 +70,7 @@ public class DoodleEmailService {
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message);
         try {
+            helper.setFrom(dto.getInitiatorEmail());
             helper.setTo(dto.getRecipients().split(";"));
             helper.setText(bodyWriter.toString(), true);
             helper.setSubject(composeSubject(dto));
@@ -132,8 +135,11 @@ public class DoodleEmailService {
     private JavaMailSender getSelectedMailSender(MailDto dto) {
         if (EmailProvider.GOOGLE.equals(dto.getEmailProvider())) {
             // we have to set the gmail password coming from the form
-            ((JavaMailSenderImpl) gmailSender).setPassword(dto.getGmailPassword());
+            ((JavaMailSenderImpl) gmailSender).setPassword(dto.getEmailPassword());
             return gmailSender;
+        } else if (EmailProvider.YAHOO.equals(dto.getEmailProvider())) {
+            ((JavaMailSenderImpl) yahooMailSender).setPassword(dto.getEmailPassword());
+            return yahooMailSender;
         }
         return europeanCommissionSender;
     }

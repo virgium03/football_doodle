@@ -6,5 +6,6 @@ package ro.ratoi.virgiliu.football.doodle.email;
 public enum EmailProvider {
 
     EUROPEAN_COMMISSION,
-    GOOGLE
+    GOOGLE,
+    YAHOO
 }
