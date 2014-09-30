@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import org.apache.commons.lang.StringUtils;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
+import org.apache.velocity.context.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -73,7 +74,7 @@ public class DoodleEmailService {
             helper.setFrom(dto.getInitiatorEmail());
             helper.setTo(dto.getRecipients().split(";"));
             helper.setText(bodyWriter.toString(), true);
-            helper.setSubject(composeSubject(dto));
+            helper.setSubject(composeSubject(dto, context));
             log.info("--- Sending email message");
             log.info("--- Recipients: {}", new Object[]{message.getRecipients(Message.RecipientType.TO)});
             log.info("--- Body: {}", bodyWriter);
@@ -125,7 +126,7 @@ public class DoodleEmailService {
 
     private VelocityContext buildEmailTemplateContext(MailDto dto, DoodleResponse doodleResponse) {
         VelocityContext context = new VelocityContext();
-        context.put("matchDate", dto.getMatchDate());
+        context.put("matchDate", mailDateFormat.format(dto.getMatchDate()));
         context.put("matchTime", dto.getMatchTime());
         context.put("gameLink", buildDoodleLink(doodleResponse));
         context.put("initiatorName", dto.getInitiatorName());
@@ -148,8 +149,11 @@ public class DoodleEmailService {
         return String.format("%s/%s", appConfigParams.getDoodleBaseUrl(), doodleResponse.getId());
     }
 
-    private String composeSubject(MailDto dto) {
-        return String.format("%s on %s %s at %s", dto.getTitle(), mailDateFormat.format(dto.getMatchDate()),
-                dto.getMatchTime(), dto.getLocation());
+    private String composeSubject(MailDto dto, Context context) {
+        StringWriter bodyWriter = new StringWriter();
+        // workaround because we cannot use ${} placeholders in the application.properties file
+        String subject = appConfigParams.getEmailDefaultSubject().replaceAll("\\{", "\\$\\{");
+        Velocity.evaluate(context, bodyWriter, "errorTemplate", subject);
+        return bodyWriter.toString();
     }
 }

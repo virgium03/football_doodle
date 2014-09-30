@@ -38,6 +38,9 @@ public class AppConfigParams {
     @Value("${email.default.recipients}")
     private String emailDefaultRecipients;
 
+    @Value("${email.default.subject}")
+    private String emailDefaultSubject;
+
     @Value("${google.mail.smtp.host}")
     private String googleMailHost;
 
